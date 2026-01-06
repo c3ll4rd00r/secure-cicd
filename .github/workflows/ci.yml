@@ -1,0 +1,31 @@
+name: CI - Build and Scan
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  build_and_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (local)
+        run: |
+          docker build -t secure-cicd:ci .
+
+      - name: Trivy scan (fail on HIGH/CRITICAL)
+        uses: aquasecurity/trivy-action@0.22.0
+        with:
+          image-ref: "secure-cicd:ci"
+          format: "table"
+          exit-code: "1"
+          ignore-unfixed: true
+          severity: "HIGH,CRITICAL"
+          scanners: "vuln"
