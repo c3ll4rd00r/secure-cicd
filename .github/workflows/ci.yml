@@ -32,7 +32,7 @@ jobs:
       - name: Build and push image (GHCR)
         run: |
           IMAGE="ghcr.io/${OWNER_LC}/secure-cicd"
-          TAG="{GITHUB_SHA}"
+          TAG="${GITHUB_SHA}"
           docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" .
           docker push "${IMAGE}:${TAG}"
           docker push "${IMAGE}:latest"
