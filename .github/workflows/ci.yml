@@ -43,10 +43,10 @@ jobs:
 
       - name: Cosign sign image
         env: 
-            COSIGN_EXPERIMENTAL: true
-            run: | 
-              IMAGE="ghcr.io/${OWNER_LC}/secure-cicd"
-              cosign sign --yes "${IMAGE}:${GITHUB_SHA}"
+            COSIGN_EXPERIMENTAL: "true"
+        run: | 
+            IMAGE="ghcr.io/${OWNER_LC}/secure-cicd"
+            cosign sign --yes "${IMAGE}:${GITHUB_SHA}"
 
       - name: Trivy scan (fail on HIGH / CRITICAL)
         uses: aquasecurity/trivy-action@0.22.0
