@@ -67,5 +67,4 @@ jobs:
           ignore-unfixed: true
           severity: "HIGH,CRITICAL"
           scanners: "vuln"
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
