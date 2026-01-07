@@ -30,28 +30,36 @@ jobs:
             username: ${{ github.actor }}
             password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image (GHCR)
+      - name: Build and push image (GHCR) and capture digest
         run: |
           IMAGE="ghcr.io/${OWNER_LC}/secure-cicd"
           TAG="${GITHUB_SHA}"
-          docker build -t "${IMAGE}:${TAG}" -t "${IMAGE}:latest" .
-          docker push "${IMAGE}:${TAG}"
-          docker push "${IMAGE}:latest"
+
+          docker buildx \
+            -- push
+            --tag "${IMAGE}:${TAG}" \
+            --tag "${IMAGE}:latest" \
+            --iidfile /tmp/image-id.txt \
+
+            DIGEST="$(cat /tmp/image-id.txt)"
+            echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+            echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Cosign sign image
+      - name: Cosign sign image by digest
         env: 
             COSIGN_EXPERIMENTAL: "true"
         run: | 
-            IMAGE="ghcr.io/${OWNER_LC}/secure-cicd"
-            cosign sign --yes "${IMAGE}:${GITHUB_SHA}"
+            IMAGE="${{ steps.build.outputs.image }}"
+            DIGEST="${{ steps.build.outputs.digest }}"
+            cosign sign --yes "${IMAGE}@{DIGEST}"
 
       - name: Trivy scan (fail on HIGH / CRITICAL)
         uses: aquasecurity/trivy-action@0.22.0
         with:
-          image-ref: "ghcr.io/${{ env.OWNER_LC }}/secure-cicd:${{ github.sha }}"
+          image-ref: "ghcr.io/${{ env.OWNER_LC }}/secure-cicd@${{ steps.build.outputs.digest }}"
           format: "table"
           exit-code: "1"
           ignore-unfixed: true
